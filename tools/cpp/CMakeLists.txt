@@ -32,9 +32,10 @@ add_executable(timeProfile.out ${CMAKE_CURRENT_LIST_DIR}/timeProfile.cpp ${CMAKE
 target_link_libraries(timeProfile.out ${MNN_DEPS})
 list(APPEND MNN_CPP_TOOLS timeProfile.out)
 
+add_executable(checkDir.out ${CMAKE_CURRENT_LIST_DIR}/checkDir.cpp)
+add_executable(checkFile.out ${CMAKE_CURRENT_LIST_DIR}/checkFile.cpp)
+
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    add_executable(checkDir.out ${CMAKE_CURRENT_LIST_DIR}/checkDir.cpp)
-    add_executable(checkFile.out ${CMAKE_CURRENT_LIST_DIR}/checkFile.cpp)
     add_executable(winogradExample.out ${CMAKE_CURRENT_LIST_DIR}/winogradExample.cpp)
     target_link_libraries(winogradExample.out ${MNN_DEPS})
     add_executable(winogradGenerateGLSL.out ${CMAKE_CURRENT_LIST_DIR}/winogradGenerateGLSL.cpp)
