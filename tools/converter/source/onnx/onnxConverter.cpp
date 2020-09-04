@@ -20,6 +20,27 @@
 #include "onnxConverter.hpp"
 #include "onnxOpConverter.hpp"
 
+template<typename T>
+void print(const std::map<std::__cxx11::string, const T *>& tensor_map, std::string name) {
+    std::cout << name << " size: " << tensor_map.size() << std::endl;
+    
+    int index = 0;
+    for (const auto& iter : tensor_map) {
+        std::cout << index++ << ": " << iter.first << std::endl;
+    }
+}
+
+template<typename T>
+void print(const std::map<std::__cxx11::string, T>& tensor_map, std::string name) {
+    std::cout << name << " size: " << tensor_map.size() << std::endl;
+    
+    int index = 0;
+    for (const auto& iter : tensor_map) {
+        std::cout << index++ << ": " << iter.first << std::endl;
+    }
+}
+
+
 int onnx2MNNNet(const std::string inputModel, const std::string bizCode, std::unique_ptr<MNN::NetT>& netT) {
     onnx::ModelProto onnxModel;
     // read ONNX Model
@@ -43,6 +64,12 @@ int onnx2MNNNet(const std::string inputModel, const std::string bizCode, std::un
     const auto& inputs               = onnxTempGraph->mInputs;
     const auto& outputs              = onnxTempGraph->mOutputs;
     const auto& constantNodeToDelete = onnxTempGraph->mConstantNodeToDelete;
+
+    // print<onnx::TensorProto>(initializers, "onnxTenmpGraph->Initializers");
+    // print<onnx::ValueInfoProto>(inputs, "onnxTenmpGraph->inputs");
+    // print<onnx::ValueInfoProto>(outputs, "onnxTenmpGraph->outputs");
+
+
     for (const auto& iter : inputs) {
         bool notHaveInitializer = initializers.find(iter.first) == initializers.end();
         if (notHaveInitializer) {
@@ -50,6 +77,8 @@ int onnx2MNNNet(const std::string inputModel, const std::string bizCode, std::un
             tensorsName.insert(std::make_pair(iter.first, tensorsName.size()));
         }
     }
+
+    print<int>(tensorsName, "tensorName");
 
     // set input node to MNN net
     for (const auto& iter : tensorsName) {
@@ -75,6 +104,9 @@ int onnx2MNNNet(const std::string inputModel, const std::string bizCode, std::un
         netT->oplists.emplace_back(MNNOp);
     }
 
+    std::cout << "nodeCount: " << nodeCount << std::endl;
+    std::set<std::string> onnxOpTypes;
+
     // onnx node ==> MNN node
     for (int i = 0; i < nodeCount; ++i) {
         const auto& onnxNode = onnxGraph.node(i);
@@ -95,6 +127,12 @@ int onnx2MNNNet(const std::string inputModel, const std::string bizCode, std::un
         MNNOp->type      = opConverter->opType();
         MNNOp->main.type = opConverter->type();
         mnnNodesMap.insert(std::make_pair(name, MNNOp));
+
+        // std::cout << i << " " << name << " src op type:" \
+        //           << opType << " -> " << MNN::EnumNameOpType(MNNOp->type) \
+        //           << " main.type: " << MNN::EnumNameOpParameter(MNNOp->main.type) << std::endl;
+        onnxOpTypes.insert(opType);
+
 
         // convert initializer to be Constant node(op)
         for (int k = 0; k < onnxNode.input_size(); ++k) {
@@ -134,7 +172,31 @@ int onnx2MNNNet(const std::string inputModel, const std::string bizCode, std::un
             netT->tensorName.push_back(onnxNode.output(ot));
             tensorsName.insert(std::make_pair(onnxNode.output(ot), tensorsName.size()));
         }
+
+        // std::cout << name << " input size: " << onnxNode.input_size() << ": ";
+        // for (int k=0; k < onnxNode.input_size(); k++) {
+        //     const auto& name = onnxNode.input(k);
+        //     if (initializers.find(name) == initializers.end()) {
+        //         std::cout << name << ", ";
+        //     }
+        // }
+        // std::cout << std::endl;
+
+        // std::cout << name << " output size: " << onnxNode.output_size() << ": ";
+        // for (int k=0; k < onnxNode.output_size(); k++) {
+        //     const auto& name = onnxNode.output(k);
+        //     std::cout << name << ", ";
+        // }
+        // std::cout << std::endl;
+        // std::cout << tensorsName.size() << std::endl;
+
     }
+
+    std::cout << "onnxOpType size: " << onnxOpTypes.size() << std::endl;
+    for (const auto& item : onnxOpTypes) {
+        std::cout << item << " ";
+    }
+    std::cout << std::endl;
 
     // set input-output tensor's index
     for (int i = 0; i < nodeCount; ++i) {

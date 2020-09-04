@@ -146,6 +146,19 @@ std::unique_ptr<MNN::NetT> optimizeNet(std::unique_ptr<MNN::NetT>& originNet, bo
         Variable::save(outputs, newNet.get());
     }
 
+    const auto& temp_net2 = newNet;
+    std::cout << "TemplateMerge MNN tensorName size: " << temp_net2->tensorName.size() << std::endl;
+    for (int i=0; i<temp_net2->tensorName.size(); i++) {
+        std::cout << i << ": " << temp_net2->tensorName[i] << std::endl;
+    }
+    std::cout << "oplist size: " << temp_net2->oplists.size() << std::endl;
+    for (int i=0; i<temp_net2->oplists.size(); i++) {
+        std::cout << i << ": " << MNN::EnumNameOpType(temp_net2->oplists[i]->type) << std::endl;
+    }
+
+    return newNet;
+
+
     std::vector<std::string> afterProgramConvert = {
         // Turn BatchNormal to Scale When inference, if `forTraining` flag is set, BN will be reserved
         "TransformBatchNormal",
