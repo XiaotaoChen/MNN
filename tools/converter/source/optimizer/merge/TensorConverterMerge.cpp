@@ -6,6 +6,7 @@
 //  Copyright © 2018, Alibaba Group Holding Limited
 //
 
+#include <iostream>
 #include "../TemplateMerge.hpp"
 #include "MNN_generated.h"
 #include <MNN/expr/ExprCreator.hpp>
@@ -115,12 +116,20 @@ static auto gRegister = []() {
             if (inputOp->type() != OpType_ConvertTensor) {
                 return false;
             }
+
+            // auto inputInfo = inputExpr->inputs()[0]->getInfo();
+            // std::cout << "[TensorConverterMerge] expr name: " << expr->name() << ", convert.input format: " << __convertFormat(inputInfo->order) \
+            //     << ", convert dest: " << inputOp->main_as_TensorConvertInfo()->dest() << std::endl;
+
             return true;
         };
         auto modify = [](EXPRP expr) {
             auto inputs = expr->inputs();
             auto inputExpr = inputs[0]->expr().first;
             auto subInputs = inputExpr->inputs();
+
+            // std::cout << "[TensorConverterMerge] expr name: " << expr->name() << std::endl;
+
             auto newExpr = Expr::create(expr->extra(), std::move(subInputs));
             newExpr->setName(expr->name());
             Expr::replace(expr, newExpr);
@@ -149,6 +158,10 @@ static auto gRegister = []() {
                 if (nullptr == inputInfo) {
                     continue;
                 }
+
+                // std::cout << "[TensorConverterSameMerge] expr name: " << expr->name() << ", convert.input format: " << __convertFormat(inputInfo->order) \
+                // << ", convert dest: " << subOp->main_as_TensorConvertInfo()->dest() << std::endl;
+
                 if (subOp->main_as_TensorConvertInfo()->dest() == __convertFormat(inputInfo->order)) {
                     return true;
                 }
@@ -156,6 +169,9 @@ static auto gRegister = []() {
             return false;
         };
         auto modify = [](EXPRP expr) {
+            
+            // std::cout << "[TensorConverterSameMerge] expr name: " << expr->name() << std::endl;
+
             auto inputs = expr->inputs();
             std::vector<VARP> newInput = inputs;;
             for (int i=0; i<inputs.size(); ++i) {
@@ -288,6 +304,9 @@ static auto gRegister = []() {
             }
             EXPRP newInputExpr;
             auto order = expr->inputs()[0]->getInfo()->order;
+
+            // std::cout << "[TurnCompabilityOpAsNC4HW4] expr type: " << MNN::EnumNameOpType(expr->get()->type()) << ", name: " << expr->name() << ", input data format: " << __convertFormat(order) << std::endl;
+
             auto newInput = Variable::create(Expr::create(expr->extra(), std::move(tempInputs), expr->outputSize()));
             newInput->setName(expr->name());
             newInput = _Convert(newInput, order);

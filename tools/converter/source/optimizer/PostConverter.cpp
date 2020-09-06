@@ -42,6 +42,15 @@ static void _printInputOutputs(const MNN::NetT* newNet) {
 }
 
 std::unique_ptr<MNN::NetT> optimizeNet(std::unique_ptr<MNN::NetT>& originNet, bool forTraining) {
+
+    std::cout << "[PostConverter.cpp] source MNN tensorName size: " << originNet->tensorName.size() << ", oplist size: " << originNet->oplists.size() << std::endl;
+    // for (int i=0; i<originNet->tensorName.size(); i++) {
+    //     std::cout << i << ": " << originNet->tensorName[i] << std::endl;
+    // }
+    // for (int i=0; i<originNet->oplists.size(); i++) {
+    //     std::cout << i << ": " << MNN::EnumNameOpType(originNet->oplists[i]->type) << std::endl;
+    // }
+
     if (forTraining) {
         LOG(INFO) << "convert model for training, reserve BatchNorm and Dropout";
     }
@@ -92,6 +101,9 @@ std::unique_ptr<MNN::NetT> optimizeNet(std::unique_ptr<MNN::NetT>& originNet, bo
     }
 
     auto program = MNN::Express::Program::create(originNet.get(), true);
+
+    // std::cout << "[PostConverter] program needGenerateCode: " << std::boolalpha << program->needGenerateCode() <<", output size:" << program->outputs().size() << std::endl;
+
     std::vector<std::string> optimizePass = {
         "Merge",
     };
@@ -112,6 +124,7 @@ std::unique_ptr<MNN::NetT> optimizeNet(std::unique_ptr<MNN::NetT>& originNet, bo
             break;
     }
     for (auto pass : optimizePass) {
+        std::cout << "[PostConverter.cpp] *************** optimizePass: " << pass << " ************************" << std::endl;
         auto& merge  = MNN::Express::TemplateMerge::getInstance(pass);
         merge.onExecute(program->outputs());
     }
@@ -147,16 +160,14 @@ std::unique_ptr<MNN::NetT> optimizeNet(std::unique_ptr<MNN::NetT>& originNet, bo
     }
 
     const auto& temp_net2 = newNet;
-    std::cout << "TemplateMerge MNN tensorName size: " << temp_net2->tensorName.size() << std::endl;
-    for (int i=0; i<temp_net2->tensorName.size(); i++) {
-        std::cout << i << ": " << temp_net2->tensorName[i] << std::endl;
-    }
-    std::cout << "oplist size: " << temp_net2->oplists.size() << std::endl;
-    for (int i=0; i<temp_net2->oplists.size(); i++) {
-        std::cout << i << ": " << MNN::EnumNameOpType(temp_net2->oplists[i]->type) << std::endl;
-    }
-
-    return newNet;
+    std::cout << "[PostConverter.cpp] TemplateMerge MNN tensorName size: " << temp_net2->tensorName.size() << ", oplist size: " << temp_net2->oplists.size() << std::endl;
+    // for (int i=0; i<temp_net2->tensorName.size(); i++) {
+    //     std::cout << i << ": " << temp_net2->tensorName[i] << std::endl;
+    // }
+    // for (int i=0; i<temp_net2->oplists.size(); i++) {
+    //     std::cout << i << ": " << MNN::EnumNameOpType(temp_net2->oplists[i]->type) << std::endl;
+    // }
+    // return newNet;
 
 
     std::vector<std::string> afterProgramConvert = {
@@ -218,6 +229,16 @@ std::unique_ptr<MNN::NetT> optimizeNet(std::unique_ptr<MNN::NetT>& originNet, bo
             LOG(INFO) << "Run " << pass << "Error\n";
         }
     }
+
+    const auto& temp_net = newNet;
+    std::cout << "[PostConverter.cpp] afterProgramConvert MNN tensorName size: " << temp_net->tensorName.size() << ", oplist size: " << temp_net->oplists.size() << std::endl;
+    // for (int i=0; i<temp_net->tensorName.size(); i++) {
+    //     std::cout << i << ": " << temp_net->tensorName[i] << std::endl;
+    // }
+    // for (int i=0; i<temp_net->oplists.size(); i++) {
+    //     std::cout << i << ": " << MNN::EnumNameOpType(temp_net->oplists[i]->type) << std::endl;
+    // }
+
 
     if (!printedInputOutput) {
         _printInputOutputs(newNet.get());

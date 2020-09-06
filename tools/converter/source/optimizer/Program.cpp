@@ -6,6 +6,8 @@
 //  Copyright © 2018, Alibaba Group Holding Limited
 //
 
+#include <iostream>
+
 #include <unordered_set>
 #include "Program.hpp"
 #include <MNN/expr/ExprCreator.hpp>
@@ -444,6 +446,22 @@ static void _create(std::map<int, VARP>& varMap, std::vector<int>& inputIndexes,
         newVar->setName(net->tensorName[outputIndexes[j]]);
         varMap[outputIndexes[j]] = newVar;
     }
+
+    // std::cout << "[expr] op type: " << MNN::EnumNameOpType(op->type) << ", inputVars: " << inputVars.size() << ", "\
+    //           << "expr name: " << expr->name() << std::endl;
+    // std::cout << "input size: " << op->inputIndexes.size() << std::endl;
+    // for (int j=0; j<op->inputIndexes.size(); j++) {
+    //     const auto& var = varMap[op->inputIndexes[j]];
+    //     std::cout << "[var] input: " << j << " : " << var->name() << std::endl;
+    // }
+
+    // std::cout << "output size: " << outputIndexes.size() << std::endl;
+    // for (int j=0; j<outputIndexes.size(); j++) {
+    //     const auto& var = varMap[outputIndexes[j]];
+    //     std::cout << "[var] output: " << j << " : " << var->name() << std::endl;
+    // }
+
+
 }
 
 std::shared_ptr<Program> Program::create(const MNN::NetT* net, bool supportExtra) {
@@ -505,6 +523,10 @@ std::shared_ptr<Program> Program::create(const MNN::NetT* net, bool supportExtra
     for (auto output : outputs) {
         program.mOutputs.emplace_back(output);
     }
+
+    // std::cout << "[Program.cpp] all ops: " << allOps.size() << ", varMap size: " << varMap.size() << ", inputIndexs.size: " << inputIndexes.size() \
+    //           << ", extraOps size: " << extraOps.size() << ", outputs size: " << outputs.size() << std::endl;
+
     if (extraOps.empty()) {
         return newProgram;
     }

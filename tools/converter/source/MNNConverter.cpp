@@ -40,31 +40,10 @@ int main(int argc, char *argv[]) {
         } else {
             std::cout << "Not Support Model Type" << std::endl;
         }
-
-        std::cout << "source MNN tensorName size: " << netT->tensorName.size() << std::endl;
-        // for (int i=0; i<netT->tensorName.size(); i++) {
-        //     std::cout << i << ": " << netT->tensorName[i] << std::endl;
-        // }
-        std::cout << "oplist size: " << netT->oplists.size() << std::endl;
-        // for (int i=0; i<netT->oplists.size(); i++) {
-        //     std::cout << i << ": " << MNN::EnumNameOpType(netT->oplists[i]->type) << std::endl;
-        // }
-
-
+        
         if (modelPath.model != modelConfig::MNN) {
             std::cout << "Start to Optimize the MNN Net..." << std::endl;
             std::unique_ptr<MNN::NetT> newNet = optimizeNet(netT, modelPath.forTraining);
-
-            std::cout << "optimized MNN tensorName size: " << newNet->tensorName.size() << std::endl;
-            // for (int i=0; i<newNet->tensorName.size(); i++) {
-            //     std::cout << i << ": " << newNet->tensorName[i] << std::endl;
-            // }
-            std::cout << "oplist size: " << newNet->oplists.size() << std::endl;
-            // for (int i=0; i<newNet->oplists.size(); i++) {
-            //     std::cout << i << ": " << MNN::EnumNameOpType(newNet->oplists[i]->type) << std::endl;
-            // }
-
-
             writeFb(newNet, modelPath.MNNModel, modelPath.benchmarkModel, modelPath.saveHalfFloat);
         } else {
             writeFb(netT, modelPath.MNNModel, modelPath.benchmarkModel, modelPath.saveHalfFloat);

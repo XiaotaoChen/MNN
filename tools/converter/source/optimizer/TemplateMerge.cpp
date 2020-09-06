@@ -6,17 +6,40 @@
 //  Copyright © 2018, Alibaba Group Holding Limited
 //
 
+#include <iostream>
+
 #include "TemplateMerge.hpp"
 #include <set>
 namespace MNN {
 namespace Express {
 bool TemplateMerge::onExecute(const std::vector<VARP>& outputs, std::shared_ptr<Parameters> parameters) {
+
+    std::cout << "[TemplateMerge.cpp] mTemplates size: " << mTemplates.size() << std::endl;
+    for (auto& iter : mTemplates) {
+        std::cout << iter.first << " ";
+    }
+    std::cout << std::endl;
+
+
     bool hasChange = false;
     do {
         hasChange = false;
         for (auto& iter : mTemplates) {
+            // if (iter.first != "TensorConverterMerge" && iter.first != "OnnxExtraManager" && iter.first != "TensorConverterSameMerge" && \
+            //     iter.first != "TurnCompabilityOpAsNC4HW4" && iter.first != "TurnBinaryToElementwise") {
+            //     std::cout << iter.first << " to continue..." << std::endl;
+            //     continue;
+            // }
+
             std::set<EXPRP> invalidVARP;
             auto execute = Variable::getExecuteOrder(outputs);
+
+            // std::cout << "template: " << iter.first << " sequence size: " << execute.size() << std::endl;
+            // int index = 0;
+            // for (const auto& item: execute) {
+            //     std::cout << index++ << ": " << item->name() << std::endl;
+            // }
+
             for (auto var : execute) {
                 if (var->get() == nullptr) {
                     continue;
@@ -32,6 +55,9 @@ bool TemplateMerge::onExecute(const std::vector<VARP>& outputs, std::shared_ptr<
                 }
             }
         }
+
+        // std::cout << "*********** hasChange: " << std::boolalpha << hasChange << " *****************" << std::endl;
+
     } while (hasChange);
     return true;
 }

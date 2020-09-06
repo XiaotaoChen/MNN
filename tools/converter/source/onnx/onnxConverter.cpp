@@ -106,6 +106,7 @@ int onnx2MNNNet(const std::string inputModel, const std::string bizCode, std::un
 
     std::cout << "nodeCount: " << nodeCount << std::endl;
     std::set<std::string> onnxOpTypes;
+    std::set<std::string> mnnOpTypes;
 
     // onnx node ==> MNN node
     for (int i = 0; i < nodeCount; ++i) {
@@ -132,6 +133,7 @@ int onnx2MNNNet(const std::string inputModel, const std::string bizCode, std::un
         //           << opType << " -> " << MNN::EnumNameOpType(MNNOp->type) \
         //           << " main.type: " << MNN::EnumNameOpParameter(MNNOp->main.type) << std::endl;
         onnxOpTypes.insert(opType);
+        mnnOpTypes.insert(MNN::EnumNameOpType(MNNOp->type));
 
 
         // convert initializer to be Constant node(op)
@@ -192,8 +194,14 @@ int onnx2MNNNet(const std::string inputModel, const std::string bizCode, std::un
 
     }
 
-    std::cout << "onnxOpType size: " << onnxOpTypes.size() << std::endl;
+    std::cout << "[onnxConverter] onnxOpType size: " << onnxOpTypes.size() << std::endl;
     for (const auto& item : onnxOpTypes) {
+        std::cout << item << " ";
+    }
+    std::cout << std::endl;
+
+    std::cout << "mnnOpType size: " << mnnOpTypes.size() << std::endl;
+    for (const auto& item: mnnOpTypes) {
         std::cout << item << " ";
     }
     std::cout << std::endl;
