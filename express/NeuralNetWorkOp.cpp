@@ -417,6 +417,16 @@ VARP _Softmax(VARP logits, int axis) {
     softmax->main.AsAxis()->axis = axis;
     return (Variable::create(Expr::create(softmax.get(), {logits})));
 }
+
+VARP _SoftmaxCustom(VARP logits, int axis) {
+    std::unique_ptr<OpT> softmax(new OpT);
+    softmax->type                = OpType_SoftmaxCustom;
+    softmax->main.type           = OpParameter_Axis;
+    softmax->main.value          = new AxisT;
+    softmax->main.AsAxis()->axis = axis;
+    return (Variable::create(Expr::create(softmax.get(), {logits})));
+}
+
 /*Computes softplus: log(exp(features) + 1).
 Args:
 features: A variable. Must be Halide_Type_Float.

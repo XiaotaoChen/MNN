@@ -40,7 +40,8 @@ std::vector<Express::VARP> Lenet::onForward(const std::vector<Express::VARP>& in
     x      = _Relu(x);
     x      = dropout->forward(x);
     x      = ip2->forward(x);
-    x      = _Softmax(x, 1);
+    // x      = _Softmax(x, 1);
+    x      = _SoftmaxCustom(x, 1);
     return {x};
 }
 
