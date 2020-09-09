@@ -63,7 +63,10 @@ void MnistUtils::train(std::shared_ptr<Module> model, std::string root) {
 
     size_t testIterations = testDataLoader->iterNumber();
 
-    for (int epoch = 0; epoch < 50; ++epoch) {
+    // faster test
+    int num_epochs = 1;
+
+    for (int epoch = 0; epoch < num_epochs; ++epoch) {
         model->clearCache();
         exe->gc(Executor::FULL);
         exe->resetProfile();
