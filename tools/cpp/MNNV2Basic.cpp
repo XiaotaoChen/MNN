@@ -395,6 +395,10 @@ static int test_main(int argc, const char* argv[]) {
         dumpTensor2File(&expectTensor, outputFile.c_str());
     }
 
+
+    MNN_PRINT("[MNNV@Basic.cpp] runSession is done, returned by cxt.\n");
+    return 0;
+
     // benchmark. for CPU, op time means calc duration; for others, op time means schedule duration.
     {
         int t = runTime;
