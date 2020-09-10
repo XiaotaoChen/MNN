@@ -421,9 +421,9 @@ VARP _Softmax(VARP logits, int axis) {
 VARP _SoftmaxCustom(VARP logits, int axis) {
     std::unique_ptr<OpT> softmax(new OpT);
     softmax->type                = OpType_SoftmaxCustom;
-    softmax->main.type           = OpParameter_Axis;
-    softmax->main.value          = new AxisT;
-    softmax->main.AsAxis()->axis = axis;
+    softmax->main.type           = OpParameter_CustomAxis;
+    softmax->main.value          = new CustomAxisT;
+    softmax->main.AsCustomAxis()->custom = axis;
     return (Variable::create(Expr::create(softmax.get(), {logits})));
 }
 

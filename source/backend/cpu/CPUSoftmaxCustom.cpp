@@ -202,7 +202,7 @@ class CPUSoftmaxCustomCreator : public CPUBackend::Creator {
 public:
     virtual Execution *onCreate(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs,
                                 const MNN::Op *op, Backend *backend) const override {
-        auto axis = op->main_as_Axis()->axis();
+        auto axis = op->main_as_CustomAxis()->custom();
         if (axis < 0) {
             axis = inputs[0]->dimensions() + axis;
         }

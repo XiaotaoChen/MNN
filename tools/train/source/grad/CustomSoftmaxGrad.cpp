@@ -6,16 +6,16 @@
 //  Copyright © 2018, Alibaba Group Holding Limited
 //
 
-#include "SoftmaxGrad.hpp"
+#include "CustomSoftmaxGrad.hpp"
 #include "core/Macro.h"
 #include <MNN/expr/ExprCreator.hpp>
 using namespace std;
 using namespace MNN;
 using namespace MNN::Express;
 
-class SoftmaxGrad : public OpGrad {
+class CustomSoftmaxGrad : public OpGrad {
 public:
-    SoftmaxGrad() {
+    CustomSoftmaxGrad() {
         mType = NO_LINEAR;
     }
     virtual std::vector<Express::VARP> onGrad(Express::EXPRP expr,
@@ -27,7 +27,8 @@ public:
         if (nullptr == info) {
             return {};
         }
-        auto axis = expr->get()->main_as_Axis()->axis();
+        auto axis = expr->get()->main_as_CustomAxis()->custom();
+
         if (axis < 0) {
             axis = axis + info->dim.size();
         }
@@ -63,13 +64,7 @@ public:
     }
 };
 static const auto gRegister = []() {
-    static SoftmaxGrad _c;
-    OpGrad::insert(OpType_Softmax, &_c);
+    static CustomSoftmaxGrad _c;
+    OpGrad::insert(OpType_SoftmaxCustom, &_c);
     return true;
 }();
-
-// static const auto gRegister2 = []() {
-//     static SoftmaxGrad _c;
-//     OpGrad::insert(OpType_SoftmaxCustom, &_c);
-//     return true;
-// }();
