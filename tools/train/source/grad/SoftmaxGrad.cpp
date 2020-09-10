@@ -67,3 +67,9 @@ static const auto gRegister = []() {
     OpGrad::insert(OpType_Softmax, &_c);
     return true;
 }();
+
+static const auto gRegister2 = []() {
+    static SoftmaxGrad _c;
+    OpGrad::insert(OpType_SoftmaxCustom, &_c);
+    return true;
+}();
