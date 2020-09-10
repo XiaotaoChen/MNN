@@ -13,7 +13,9 @@
 #include "core/Concurrency.h"
 #include "core/Macro.h"
 #include "core/TensorUtils.hpp"
-
+#ifdef MNN_USE_NEON
+#include <arm_neon.h>
+#endif
 namespace MNN {
 
 int CPUSoftmaxCustom::_softmax1(const float *srcData, float *dstData, int outside, int channel, int threadNum) {
@@ -26,6 +28,29 @@ int CPUSoftmaxCustom::_softmax1(const float *srcData, float *dstData, int outsid
             float maxValue = srcY[0];
             {
                 int c = 1;
+#ifdef MNN_USE_NEON
+#if !(defined(__ARM_FEATURE_FMA) && defined(__aarch64__))
+#define vmaxvq_f32(v)                 \
+    ({                                \
+        float __m = v[0];             \
+        for (int i = 1; i < 4; i++) { \
+            if (v[i] > __m)           \
+                __m = v[i];           \
+        }                             \
+        __m;                          \
+    })
+#endif
+                if (c + 3 < channel) {
+                    float32x4_t maxx4 = vld1q_f32(srcY + c);
+                    c += 4;
+                    for (; c + 3 < channel; c += 4) {
+                        maxx4 = vmaxq_f32(maxx4, vld1q_f32(srcY + c));
+                    }
+                    float value = vmaxvq_f32(maxx4);
+                    if (value > maxValue)
+                        maxValue = value;
+                }
+#endif
                 for (; c < channel; ++c) {
                     float value = srcY[c];
                     if (value > maxValue)
@@ -72,6 +97,12 @@ int CPUSoftmaxCustom::_softmax1(const float *srcData, float *dstData, int outsid
             // div
             {
                 int c = 0;
+#ifdef MNN_USE_NEON
+                float div = 1.f / sumValue;
+                for (; c + 3 < channel; c += 4) {
+                    vst1q_f32(dstY + c, vmulq_n_f32(vld1q_f32(dstY + c), div));
+                }
+#endif
                 for (; c < channel; ++c) {
                     dstY[c] /= sumValue;
                 }
@@ -85,7 +116,7 @@ int CPUSoftmaxCustom::_softmax1(const float *srcData, float *dstData, int outsid
 int CPUSoftmaxCustom::_softmaxCommon(const float *srcData, float *dstData, int inside, int outside, int channel,
                                float *maxValue, float *sumValue, int threadNum) {
     if (inside == 1) {
-        MNN_PRINT("[CPUSoftmaxCustom.cpp] inside: %d, outside: %d, channel:%d\n", inside, outside, channel);
+        // MNN_PRINT("[CPUSoftmaxCustom.cpp] inside: %d, outside: %d, channel:%d\n", inside, outside, channel);
         return _softmax1(srcData, dstData, outside, channel, threadNum);
     }
         
