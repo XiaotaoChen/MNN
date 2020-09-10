@@ -6,6 +6,7 @@
 //  Copyright © 2018, Alibaba Group Holding Limited
 //
 
+#include <assert.h>
 #include "backend/cpu/CPUSoftmaxCustom.hpp"
 #include <math.h>
 #include "backend/cpu/CPUBackend.hpp"
@@ -13,9 +14,6 @@
 #include "core/Concurrency.h"
 #include "core/Macro.h"
 #include "core/TensorUtils.hpp"
-#ifdef MNN_USE_NEON
-#include <arm_neon.h>
-#endif
 namespace MNN {
 
 int CPUSoftmaxCustom::_softmax1(const float *srcData, float *dstData, int outside, int channel, int threadNum) {
@@ -28,29 +26,6 @@ int CPUSoftmaxCustom::_softmax1(const float *srcData, float *dstData, int outsid
             float maxValue = srcY[0];
             {
                 int c = 1;
-#ifdef MNN_USE_NEON
-#if !(defined(__ARM_FEATURE_FMA) && defined(__aarch64__))
-#define vmaxvq_f32(v)                 \
-    ({                                \
-        float __m = v[0];             \
-        for (int i = 1; i < 4; i++) { \
-            if (v[i] > __m)           \
-                __m = v[i];           \
-        }                             \
-        __m;                          \
-    })
-#endif
-                if (c + 3 < channel) {
-                    float32x4_t maxx4 = vld1q_f32(srcY + c);
-                    c += 4;
-                    for (; c + 3 < channel; c += 4) {
-                        maxx4 = vmaxq_f32(maxx4, vld1q_f32(srcY + c));
-                    }
-                    float value = vmaxvq_f32(maxx4);
-                    if (value > maxValue)
-                        maxValue = value;
-                }
-#endif
                 for (; c < channel; ++c) {
                     float value = srcY[c];
                     if (value > maxValue)
@@ -97,12 +72,6 @@ int CPUSoftmaxCustom::_softmax1(const float *srcData, float *dstData, int outsid
             // div
             {
                 int c = 0;
-#ifdef MNN_USE_NEON
-                float div = 1.f / sumValue;
-                for (; c + 3 < channel; c += 4) {
-                    vst1q_f32(dstY + c, vmulq_n_f32(vld1q_f32(dstY + c), div));
-                }
-#endif
                 for (; c < channel; ++c) {
                     dstY[c] /= sumValue;
                 }
@@ -115,80 +84,13 @@ int CPUSoftmaxCustom::_softmax1(const float *srcData, float *dstData, int outsid
 }
 int CPUSoftmaxCustom::_softmaxCommon(const float *srcData, float *dstData, int inside, int outside, int channel,
                                float *maxValue, float *sumValue, int threadNum) {
-    if (inside == 1) {
-        // MNN_PRINT("[CPUSoftmaxCustom.cpp] inside: %d, outside: %d, channel:%d\n", inside, outside, channel);
-        return _softmax1(srcData, dstData, outside, channel, threadNum);
-    }
-        
 
-    const int stepY = inside * channel;
-    MNN_CONCURRENCY_BEGIN(tId, threadNum);
-    {
-        const float *srcY  = srcData + tId * stepY;
-        float *dstY        = dstData + tId * stepY;
-        float *maxValueSub = maxValue + tId * inside;
-
-        for (int y = (int)tId; y < outside; y += threadNum, srcY += stepY * threadNum, dstY += stepY * threadNum) {
-            memcpy(maxValueSub, srcY, sizeof(float) * inside);
-            const float *src = srcY + inside;
-            for (int c = 1; c < channel; ++c, src += inside) {
-                for (int x = 0; x < inside; ++x) {
-                    if (src[x] > maxValueSub[x])
-                        maxValueSub[x] = src[x];
-                }
-            }
-            src        = srcY;
-            float *dst = dstY;
-            for (int c = 0; c < channel; ++c, src += inside, dst += inside) {
-                for (int x = 0; x < inside; ++x) {
-                    dst[x] = -src[x] + maxValueSub[x];
-                }
-            }
-        }
+    if (inside != 1) {
+        MNN_ERROR("%s:%d [CPUSoftmaxCustom.cpp] require inside to be 1, actually is %d\n", __FILE__, __LINE__, inside);
+        assert(false);
     }
-    MNN_CONCURRENCY_END();
-
-    auto totalSize = channel * inside * outside;
-    //Exp
-    auto schedule = ((CPUBackend*)backend())->multiThreadDivide(totalSize);
-    int sizeDivide = schedule.first;
-    int scheduleNumber = schedule.second;
-
-    MNN_CONCURRENCY_BEGIN(tId, scheduleNumber) {
-        int start = sizeDivide * (int)tId;
-        int realSize = sizeDivide;
-        if (tId == scheduleNumber -1 ) {
-            realSize = totalSize - start;
-        }
-        if (realSize > 0) {
-            MNNExp(dstData + start, dstData + start, realSize);
-        }
-    }
-    MNN_CONCURRENCY_END();
-    
-    MNN_CONCURRENCY_BEGIN(tId, threadNum);
-    {
-        const float *srcY  = srcData + tId * stepY;
-        float *dstY        = dstData + tId * stepY;
-        float *sumValueSub = sumValue + tId * inside;
-        for (int y = (int)tId; y < outside; y += threadNum, srcY += stepY * threadNum, dstY += stepY * threadNum) {
-            memset(sumValueSub, 0, sizeof(float) * inside);
-            float *dst = dstY;
-            for (int c = 0; c < channel; ++c, dst += inside) {
-                for (int x = 0; x < inside; ++x) {
-                    sumValueSub[x] += dst[x];
-                }
-            }
-            dst = dstY;
-            for (int c = 0; c < channel; ++c, dst += inside) {
-                for (int x = 0; x < inside; ++x) {
-                    dst[x] /= sumValueSub[x];
-                }
-            }
-        }
-    }
-    MNN_CONCURRENCY_END();
-    return 0;
+    // MNN_PRINT("[CPUSoftmaxCustom.cpp] inside: %d, outside: %d, channel:%d\n", inside, outside, channel);
+    return _softmax1(srcData, dstData, outside, channel, threadNum);
 }
 
 ErrorCode CPUSoftmaxCustom::onResize(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
