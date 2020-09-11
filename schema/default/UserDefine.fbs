@@ -9,3 +9,8 @@ table TensorConvertInfo {
 table CustomAxis {
     custom:int;
 }
+
+table ReshapeCustom {
+    dimensions:[int];
+    dimType: MNN_DATA_FORMAT;
+}

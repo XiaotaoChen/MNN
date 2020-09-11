@@ -46,6 +46,11 @@ MNN_PUBLIC VARP _MaxPool(VARP x, INTS kernel, INTS stride = {1, 1}, PaddingMode 
 MNN_PUBLIC VARP _AvePool(VARP x, INTS kernel, INTS stride = {1, 1}, PaddingMode pad = VALID, INTS pads= {0, 0});
 MNN_PUBLIC VARP _Reshape(VARP x, INTS shape, Dimensionformat original_format = NHWC);
 MNN_PUBLIC VARP _Reshape(VARP x, VARP shape);
+
+// custom reshape
+MNN_PUBLIC VARP _ReshapeCustom(VARP x, INTS shape, Dimensionformat original_format = NHWC);
+MNN_PUBLIC VARP _ReshapeCustom(VARP x, VARP shape);
+
 MNN_PUBLIC VARP _Scale(VARP x, int channels, std::vector<float>&& scales, std::vector<float>&& bias);
 
 MNN_PUBLIC VARP _Relu(VARP x, float slope = 0.0f);

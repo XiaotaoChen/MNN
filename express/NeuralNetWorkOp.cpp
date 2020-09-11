@@ -333,6 +333,17 @@ VARP _Reshape(VARP x, INTS shape, Dimensionformat original_format) {
     reshape->main.AsReshape()->dimType = (MNN_DATA_FORMAT)Utils::convertFormat(original_format);
     return (Variable::create(Expr::create(reshape.get(), {x})));
 }
+
+VARP _ReshapeCustom(VARP x, INTS shape, Dimensionformat original_format) {
+    std::unique_ptr<OpT> reshape(new OpT);
+    reshape->type                      = OpType_ReshapeCustom;
+    reshape->main.type                 = OpParameter_ReshapeCustom;
+    reshape->main.value                = new ReshapeCustomT;
+    reshape->main.AsReshapeCustom()->dimensions    = shape;
+    reshape->main.AsReshapeCustom()->dimType = (MNN_DATA_FORMAT)Utils::convertFormat(original_format);
+    return (Variable::create(Expr::create(reshape.get(), {x})));
+}
+
 /*Reshapes a variable.
 Args:
 x: A variable. 
@@ -350,6 +361,18 @@ VARP _Reshape(VARP x, VARP shape) {
     reshape->main.AsReshape()->dimType = (MNN_DATA_FORMAT)Utils::convertFormat(x->getInfo()->order);
     return (Variable::create(Expr::create(reshape.get(), {x, shape})));
 }
+
+VARP _ReshapeCustom(VARP x, VARP shape) {
+    MNN_ASSERT(nullptr != x);
+    MNN_ASSERT(nullptr != x->getInfo());
+    std::unique_ptr<OpT> reshape(new OpT);
+    reshape->type                      = OpType_ReshapeCustom;
+    reshape->main.type                 = OpParameter_ReshapeCustom;
+    reshape->main.value                = new ReshapeCustomT;
+    reshape->main.AsReshapeCustom()->dimType = (MNN_DATA_FORMAT)Utils::convertFormat(x->getInfo()->order);
+    return (Variable::create(Expr::create(reshape.get(), {x, shape})));
+}
+
 VARP _Scale(VARP x, int channels, std::vector<float>&& scales, std::vector<float>&& bias) {
     std::unique_ptr<OpT> scale(new OpT);
     scale->type                      = OpType_Scale;

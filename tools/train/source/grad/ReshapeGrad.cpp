@@ -40,5 +40,6 @@ static const auto gRegister = []() {
     OpGrad::insert(OpType_Reshape, &_c);
     OpGrad::insert(OpType_Squeeze, &_c);
     OpGrad::insert(OpType_Unsqueeze, &_c);
+    OpGrad::insert(OpType_ReshapeCustom, &_c);
     return true;
 }();

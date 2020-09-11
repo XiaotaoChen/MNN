@@ -106,6 +106,16 @@ public:
     }
 };
 
+class CPUReshapeCustomCreator : public CPUBackend::Creator {
+public:
+    virtual Execution *onCreate(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs,
+                                const MNN::Op *op, Backend *backend) const override {
+        return new CPUReshape(backend, op->main_as_ReshapeCustom()->dimType());
+    }
+};
+
 REGISTER_CPU_OP_CREATOR(CPUReshapeCreator, OpType_Reshape);
+
+REGISTER_CPU_OP_CREATOR(CPUReshapeCustomCreator, OpType_ReshapeCustom);
 
 } // namespace MNN

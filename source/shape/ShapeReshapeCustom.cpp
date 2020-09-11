@@ -11,7 +11,7 @@
 #include "core/TensorUtils.hpp"
 
 namespace MNN {
-class ReshapeComputer : public SizeComputer {
+class ReshapeCustomComputer : public SizeComputer {
 public:
     virtual bool onComputeSize(const MNN::Op* op, const std::vector<Tensor*>& inputs,
                                const std::vector<Tensor*>& outputs) const override {
@@ -24,7 +24,7 @@ public:
         std::vector<int> shapes;
         if (1 == inputs.size()) {
             // Const shape
-            auto shape = op->main_as_Reshape()->dims();
+            auto shape = op->main_as_ReshapeCustom()->dimensions();
             dimSize    = shape->size();
             shapes.resize(dimSize);
             for (int i = 0; i < dimSize; ++i) {
@@ -90,6 +90,6 @@ public:
     }
 };
 
-REGISTER_SHAPE_INPUTS(ReshapeComputer, OpType_Reshape, {1});
+REGISTER_SHAPE_INPUTS(ReshapeCustomComputer, OpType_ReshapeCustom, {1});
 
 } // namespace MNN

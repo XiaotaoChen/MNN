@@ -171,6 +171,7 @@ enum OpType : int {
 
     // custom op
     SoftmaxCustom,
+    ReshapeCustom,
 }
 
 table Plugin {
@@ -270,7 +271,8 @@ union OpParameter {
     DetectionPostProcessParam,
     OneHotParam,
     PadParam,
-    CustomAxis // customAxis
+    CustomAxis, // customAxis
+    ReshapeCustom,
 }
 
 table Op {
