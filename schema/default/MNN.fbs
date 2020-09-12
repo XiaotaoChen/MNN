@@ -172,6 +172,8 @@ enum OpType : int {
     // custom op
     SoftmaxCustom,
     ReshapeCustom,
+    ReLUCustom,
+    ReLUGradCustom,
 }
 
 table Plugin {
@@ -273,6 +275,7 @@ union OpParameter {
     PadParam,
     CustomAxis, // customAxis
     ReshapeCustom,
+    ReLUCustom,
 }
 
 table Op {

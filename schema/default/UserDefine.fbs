@@ -14,3 +14,7 @@ table ReshapeCustom {
     dimensions:[int];
     dimType: MNN_DATA_FORMAT;
 }
+
+table ReLUCustom {
+    threshold:float;
+}

@@ -35,10 +35,11 @@ std::vector<Express::VARP> Lenet::onForward(const std::vector<Express::VARP>& in
     x      = conv2->forward(x);
     x      = _MaxPool(x, {2, 2}, {2, 2});
     x      = _Convert(x, NCHW);
-    // x      = _Reshape(x, {0, -1});
-    x      = _ReshapeCustom(x, {0, -1});
+    x      = _Reshape(x, {0, -1});
+    // x      = _ReshapeCustom(x, {0, -1});
     x      = ip1->forward(x);
     x      = _Relu(x);
+    x      = _ReluCustom(x);
     x      = dropout->forward(x);
     x      = ip2->forward(x);
     x      = _Softmax(x, 1);

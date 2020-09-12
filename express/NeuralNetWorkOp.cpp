@@ -398,6 +398,17 @@ VARP _Relu(VARP x, float slope) {
     relu->main.AsRelu()->slope = slope;
     return (Variable::create(Expr::create(relu.get(), {x})));
 }
+
+// custom Relu
+VARP _ReluCustom(VARP x, float slope) {
+    std::unique_ptr<OpT> relu(new OpT);
+    relu->type                 = OpType_ReLUCustom;
+    relu->main.type            = OpParameter_ReLUCustom;
+    relu->main.value           = new ReLUCustomT;
+    relu->main.AsReLUCustom()->threshold = slope;
+    return (Variable::create(Expr::create(relu.get(), {x})));
+}
+
 /*Given an input value x， it computes Rectified Linear 6: min(max(x, 0), 6).
 Args:
 x: A variable. 

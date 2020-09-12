@@ -58,6 +58,9 @@ MNN_PUBLIC VARP _Relu6(VARP x);
 MNN_PUBLIC VARP _PRelu(VARP x, std::vector<float> &&slopes);
 MNN_PUBLIC VARP _Softmax(VARP logits, int axis = -1);
 
+// custom relu
+MNN_PUBLIC VARP _ReluCustom(VARP x, float slope = 0.0f);
+
 // custom softmax
 MNN_PUBLIC VARP _SoftmaxCustom(VARP logits, int axis = -1);
 

@@ -73,10 +73,19 @@ public:
         if (op->type() == OpType_Relu6Grad) {
             return new CPURelu6Grad(backend);
         }
+
+        if (op->type() == OpType_ReLUGradCustom) {
+            auto slope = op->main_as_ReLUCustom()->threshold();
+            return new CPUReluGrad(slope, backend);
+        }
+
         return nullptr;
     }
 };
 
 REGISTER_CPU_OP_CREATOR(CPUReluGradCreator, OpType_ReluGrad);
 REGISTER_CPU_OP_CREATOR(CPUReluGradCreator, OpType_Relu6Grad);
+
+REGISTER_CPU_OP_CREATOR(CPUReluGradCreator, OpType_ReLUGradCustom);
+
 } // namespace MNN

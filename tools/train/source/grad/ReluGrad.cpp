@@ -84,5 +84,9 @@ static const auto gRegister = []() {
     OpGrad::insert(OpType_ReLU6, &_d);
     static PReluGrad _e;
     OpGrad::insert(OpType_PReLU, &_e);
+
+    static ReluGrad _f;
+    OpGrad::insert(OpType_ReLUCustom, &_f);
+
     return true;
 }();

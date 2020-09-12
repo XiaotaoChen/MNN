@@ -110,6 +110,16 @@ public:
             }
             return new CPURelu(backend, slope);
         }
+
+        if (op->type() == OpType_ReLUCustom) {
+            auto slope = 0.0f;
+            if (nullptr != op->main() && OpParameter_ReLUCustom == op->main_type()) {
+                slope = op->main_as_ReLUCustom()->threshold();
+            }
+            return new CPURelu(backend, slope);
+        }
+
+
         MNN_ASSERT(op->type() == OpType_PReLU);
         if (op->main_as_PRelu()->slopeCount() == 1) {
             return new CPURelu(backend, op->main_as_PRelu()->slope()->data()[0]);
@@ -136,4 +146,7 @@ public:
 REGISTER_CPU_OP_CREATOR(CPUReluCreator, OpType_ReLU);
 REGISTER_CPU_OP_CREATOR(CPUReluCreator, OpType_PReLU);
 REGISTER_CPU_OP_CREATOR(CPURelu6Creator, OpType_ReLU6);
+
+REGISTER_CPU_OP_CREATOR(CPUReluCreator, OpType_ReLUCustom);
+
 } // namespace MNN
