@@ -396,7 +396,7 @@ static int test_main(int argc, const char* argv[]) {
     }
 
 
-    MNN_PRINT("[MNNV@Basic.cpp] runSession is done, returned by cxt.\n");
+    MNN_PRINT("[MNNV2Basic.cpp] runSession is done, returned by cxt.\n");
     return 0;
 
     // benchmark. for CPU, op time means calc duration; for others, op time means schedule duration.

@@ -51,8 +51,54 @@ public:
     }
 };
 
+class OnnxReshapeCustomTransform : public OnnxExtraManager::Transform {
+public:
+    virtual EXPRP onExecute(EXPRP expr) const override {
+        auto inputs = expr->inputs();
+
+        MNN_CHECK(inputs.size() == 2, "Onnx ReshapeCustom should have 2 inputs!");
+
+        auto shape        = inputs[1];
+        auto shapeDataPtr = shape->readMap<int32_t>();
+
+        std::unique_ptr<OpT> mergedReshape(new OpT);
+        mergedReshape->name = expr->name();
+        mergedReshape->type      = OpType_ReshapeCustom;
+        mergedReshape->main.type = OpParameter_ReshapeCustom;
+
+        MNN_PRINT("[OnnxReshape.cpp] onExecute name %s transform to %s\n", expr->name().c_str(), MNN::EnumNameOpType(mergedReshape->type));
+
+        std::unique_ptr<ReshapeCustomT> reshapeParam(new ReshapeCustomT);
+        reshapeParam->dimType = MNN::MNN_DATA_FORMAT_NCHW;
+
+        if (true) {
+            mergedReshape->main.value = reshapeParam.release();
+            return Expr::create(mergedReshape.get(), {inputs[0], inputs[1]});
+        }
+
+        // shape is Constant
+        auto shapeInfo = shape->getInfo();
+        MNN_CHECK(shapeInfo != nullptr, "The Second input of ReshapeCustom shoud be Constant!");
+
+        const int dimSize = shapeInfo->size;
+        reshapeParam->dimensions.resize(dimSize);
+        memcpy(reshapeParam->dimensions.data(), shapeDataPtr, dimSize * sizeof(int32_t));
+
+        mergedReshape->main.value = reshapeParam.release();
+
+        auto newExpr = Expr::create(mergedReshape.get(), {inputs[0]});
+        newExpr->setName(expr->name());
+        return newExpr;
+    }
+};
+
+// static auto gRegister = []() {
+//     OnnxExtraManager::get()->insert("Reshape", std::shared_ptr<OnnxExtraManager::Transform>(new OnnxReshapeTransform));
+//     return true;
+// }();
+
 static auto gRegister = []() {
-    OnnxExtraManager::get()->insert("Reshape", std::shared_ptr<OnnxExtraManager::Transform>(new OnnxReshapeTransform));
+    OnnxExtraManager::get()->insert("Reshape", std::shared_ptr<OnnxExtraManager::Transform>(new OnnxReshapeCustomTransform));
     return true;
 }();
 
