@@ -220,7 +220,8 @@ public:
         auto input = inputs[0];
         auto& option = mParameter.option;
         if (getIsTraining()) {
-            auto tempOutput = _Conv(mParameter.weight, mParameter.bias, _Convert(input, NC4HW4), option.padMode, option.stride, option.dilate, mParameter.group, mParameter.option.pads);
+            // auto tempOutput = _Conv(mParameter.weight, mParameter.bias, _Convert(input, NC4HW4), option.padMode, option.stride, option.dilate, mParameter.group, mParameter.option.pads);
+            auto tempOutput = _ConvCustom(mParameter.weight, mParameter.bias, _Convert(input, NC4HW4), option.padMode, option.stride, option.dilate, mParameter.group, mParameter.option.pads);
             tempOutput->setName(name());
             tempOutput = _activate(tempOutput, option.fusedActivationFunction);
             return {tempOutput};
@@ -242,7 +243,9 @@ public:
                 ::memset(bias.data(), 0, bias.size() * sizeof(float));
             }
         }
-        auto tempOutput = _Conv(std::move(weight), std::move(bias), _Convert(input, NC4HW4), option.channel, option.kernelSize, option.padMode, option.stride, option.dilate, mParameter.group, mParameter.option.pads, relu, relu6);
+        // auto tempOutput = _Conv(std::move(weight), std::move(bias), _Convert(input, NC4HW4), option.channel, option.kernelSize, option.padMode, option.stride, option.dilate, mParameter.group, mParameter.option.pads, relu, relu6);
+        auto tempOutput = _ConvCustom(std::move(weight), std::move(bias), _Convert(input, NC4HW4), option.channel, option.kernelSize, option.padMode, option.stride, option.dilate, mParameter.group, mParameter.option.pads, relu, relu6);
+
         tempOutput->setName(name());
         return {tempOutput};
     }

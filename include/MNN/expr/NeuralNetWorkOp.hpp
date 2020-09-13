@@ -47,6 +47,12 @@ MNN_PUBLIC VARP _AvePool(VARP x, INTS kernel, INTS stride = {1, 1}, PaddingMode 
 MNN_PUBLIC VARP _Reshape(VARP x, INTS shape, Dimensionformat original_format = NHWC);
 MNN_PUBLIC VARP _Reshape(VARP x, VARP shape);
 
+// custom conv
+MNN_PUBLIC VARP _ConvCustom(VARP weight, VARP bias, VARP x, PaddingMode pad = VALID, INTS stride = {1, 1},
+                      INTS dilate = {1, 1}, int group = 1, INTS pads = {0, 0});
+MNN_PUBLIC VARP _ConvCustom(std::vector<float>&& weight, std::vector<float>&& bias, VARP x, INTS channel, INTS kernelSize,
+                      PaddingMode pad = VALID, INTS stride = {1, 1}, INTS dilate = {1, 1}, int group = 1, INTS pads = {0, 0}, bool relu = false, bool relu6 = false);
+
 // custom reshape
 MNN_PUBLIC VARP _ReshapeCustom(VARP x, INTS shape, Dimensionformat original_format = NHWC);
 MNN_PUBLIC VARP _ReshapeCustom(VARP x, VARP shape);

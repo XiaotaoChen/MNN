@@ -1,4 +1,6 @@
 include "Tensor.fbs";
+include "CaffeOp.fbs";
+
 namespace MNN;
 table TensorConvertInfo {
     source:MNN_DATA_FORMAT;
@@ -17,4 +19,13 @@ table ReshapeCustom {
 
 table ReLUCustom {
     threshold:float;
+}
+
+table ConvolutionCustom {
+    common_param:Convolution2DCommon;
+    weight_vec:[float];
+    bias_vec:[float];
+
+    quanParameter:IDSTQuan;
+    symmetricQuan:QuantizedFloatParam;
 }

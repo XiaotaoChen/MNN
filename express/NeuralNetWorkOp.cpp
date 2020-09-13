@@ -248,6 +248,141 @@ VARP _Conv(float weight, float bias, VARP x, INTS channel, INTS kernelSize, Padd
     return (Variable::create(Expr::create(convOp.get(), {x})));
 }
 
+// custom conv
+VARP _ConvCustom(VARP weight, VARP bias, VARP x, PaddingMode pad, INTS stride, INTS dilate, int group, INTS pads) {
+
+    // MNN_PRINT("[ConvCustom] VARP create...\n");
+
+    std::unique_ptr<OpT> convOp(new OpT);
+    convOp->type = OpType_ConvolutionCustom;
+    auto shape   = weight->getInfo();
+    if (NHWC == shape->order) {
+        weight = _Transpose(weight, {0, 3, 1, 2});
+        shape  = weight->getInfo();
+    }
+    auto channel    = std::vector<int>{shape->dim[0], shape->dim[1]};
+    auto kernelSize = std::vector<int>{shape->dim[3], shape->dim[2]};
+    if (1 == channel[1] && channel[0] == group) {
+        convOp->type = OpType_ConvolutionDepthwise;
+        channel[1] = group;
+        convOp->main.type  = OpParameter_Convolution2D;
+        convOp->main.value = new Convolution2DT;
+        auto conv2D        = convOp->main.AsConvolution2D();
+        conv2D->common.reset(new Convolution2DCommonT);
+        if (pads.size() == 2) {
+            conv2D->common->padX        = pads[0];
+            conv2D->common->padY        = pads[1];
+        } else {
+            conv2D->common->pads = std::move(pads);
+        }
+        conv2D->common->padMode     = _convertPadMode(pad);
+        conv2D->common->strideX     = stride[0];
+        conv2D->common->strideY     = stride[1];
+        conv2D->common->group       = group;
+        conv2D->common->outputCount = channel[0];
+        conv2D->common->inputCount  = channel[1];
+        conv2D->common->dilateX     = dilate[0];
+        conv2D->common->dilateY     = dilate[1];
+        conv2D->common->kernelX     = kernelSize[0];
+        conv2D->common->kernelY     = kernelSize[1];
+    }
+    else {
+        convOp->main.type  = OpParameter_ConvolutionCustom;
+        convOp->main.value = new ConvolutionCustomT;
+        auto conv2D        = convOp->main.AsConvolutionCustom();
+        conv2D->common_param.reset(new Convolution2DCommonT);
+        if (pads.size() == 2) {
+            conv2D->common_param->padX        = pads[0];
+            conv2D->common_param->padY        = pads[1];
+        } else {
+            conv2D->common_param->pads = std::move(pads);
+        }
+        conv2D->common_param->padMode     = _convertPadMode(pad);
+        conv2D->common_param->strideX     = stride[0];
+        conv2D->common_param->strideY     = stride[1];
+        conv2D->common_param->group       = group;
+        conv2D->common_param->outputCount = channel[0];
+        conv2D->common_param->inputCount  = channel[1];
+        conv2D->common_param->dilateX     = dilate[0];
+        conv2D->common_param->dilateY     = dilate[1];
+        conv2D->common_param->kernelX     = kernelSize[0];
+        conv2D->common_param->kernelY     = kernelSize[1];
+    }
+    
+    if (nullptr == bias) {
+        return (Variable::create(Expr::create(convOp.get(), {x, weight})));
+    }
+    return (Variable::create(Expr::create(convOp.get(), {x, weight, bias})));
+}
+
+VARP _ConvCustom(std::vector<float>&& weight, std::vector<float>&& bias, VARP x, INTS channel, INTS kernelSize,
+           PaddingMode pad, INTS stride, INTS dilate, int group, INTS pads, bool relu, bool relu6) {
+
+    // MNN_PRINT("[ConvCustom] vector create channel[0,1]: %d, %d, group: %d ...\n", channel[0], channel[1], group);
+    
+    std::unique_ptr<OpT> convOp(new OpT);
+    if (channel[0] == channel[1] && channel[0] == group) {
+        convOp->type = OpType_ConvolutionDepthwise;
+        convOp->main.type  = OpParameter_Convolution2D;
+        convOp->main.value = new Convolution2DT;
+        auto conv2D        = convOp->main.AsConvolution2D();
+        conv2D->common.reset(new Convolution2DCommonT);
+        conv2D->common->padMode     = _convertPadMode(pad);
+        if (pads.size() == 2) {
+            conv2D->common->padX        = pads[0];
+            conv2D->common->padY        = pads[1];
+        } else {
+            conv2D->common->pads = std::move(pads);
+        }
+        conv2D->common->strideX     = stride[0];
+        conv2D->common->strideY     = stride[1];
+        conv2D->common->group       = group;
+        conv2D->common->outputCount = channel[1];
+        conv2D->common->inputCount  = channel[0];
+        conv2D->common->dilateX     = dilate[0];
+        conv2D->common->dilateY     = dilate[1];
+        conv2D->common->kernelX     = kernelSize[0];
+        conv2D->common->kernelY     = kernelSize[1];
+        conv2D->common->relu6 = relu6;
+        conv2D->common->relu = relu;
+        MNN_ASSERT(weight.size() == channel[1] * (channel[0] / group) * kernelSize[0] * kernelSize[1]);
+        conv2D->weight = std::move(weight);
+        MNN_ASSERT(bias.size() == channel[1]);
+        conv2D->bias = std::move(bias);
+    }
+    else {
+        convOp->type = OpType_ConvolutionCustom;
+        convOp->main.type  = OpParameter_ConvolutionCustom;
+        convOp->main.value = new ConvolutionCustomT;
+        auto conv2D        = convOp->main.AsConvolutionCustom();
+        conv2D->common_param.reset(new Convolution2DCommonT);
+        conv2D->common_param->padMode     = _convertPadMode(pad);
+        if (pads.size() == 2) {
+            conv2D->common_param->padX        = pads[0];
+            conv2D->common_param->padY        = pads[1];
+        } else {
+            conv2D->common_param->pads = std::move(pads);
+        }
+        conv2D->common_param->strideX     = stride[0];
+        conv2D->common_param->strideY     = stride[1];
+        conv2D->common_param->group       = group;
+        conv2D->common_param->outputCount = channel[1];
+        conv2D->common_param->inputCount  = channel[0];
+        conv2D->common_param->dilateX     = dilate[0];
+        conv2D->common_param->dilateY     = dilate[1];
+        conv2D->common_param->kernelX     = kernelSize[0];
+        conv2D->common_param->kernelY     = kernelSize[1];
+        conv2D->common_param->relu6 = relu6;
+        conv2D->common_param->relu = relu;
+        MNN_ASSERT(weight.size() == channel[1] * (channel[0] / group) * kernelSize[0] * kernelSize[1]);
+        conv2D->weight_vec = std::move(weight);
+        MNN_ASSERT(bias.size() == channel[1]);
+        conv2D->bias_vec = std::move(bias);
+    }
+    return (Variable::create(Expr::create(convOp.get(), {x})));
+}
+
+
 VARP _Deconv(VARP weight, VARP bias, VARP x, PaddingMode pad, INTS stride, INTS dilate, int group, INTS pads) {
     std::unique_ptr<OpT> convOp(new OpT);
     convOp->type    = OpType_Deconvolution;

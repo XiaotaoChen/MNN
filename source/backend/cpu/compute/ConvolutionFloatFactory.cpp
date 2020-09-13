@@ -94,4 +94,59 @@ Execution* ConvolutionFloatFactory::create(const std::vector<Tensor*>& inputs, c
     return new ConvolutionGroup(backend, subConvolution);
 }
 
+
+Execution* ConvolutionCustomFloatFactory::create(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs,
+                                           const MNN::Op* op, Backend* backend) {
+    auto conv2d = op->main_as_ConvolutionCustom();
+    if (inputs.size() > 1) {
+        // Use Input Weight and Bias
+        return new ConvolutionTiledExecutorMultiInput(conv2d->common_param(), backend);
+    }
+    const float* originWeight = nullptr;
+    size_t originWeightSize   = 0;
+    std::shared_ptr<ConvolutionCommon::Int8Common> quanCommon;
+    if (nullptr != conv2d->quanParameter()) {
+        quanCommon = ConvolutionCommon::load(conv2d->quanParameter());
+        if (nullptr == quanCommon) {
+            MNN_ERROR("Memory not Enough, can't extract IDST Convolution: %s \n", op->name()->c_str());
+            return nullptr;
+        }
+        if (quanCommon->weightFloat.get() == nullptr) {
+            return ConvolutionIntFactory::create(inputs[0], outputs[0], op, backend, quanCommon.get());
+        }
+        // Back to float
+        originWeight     = quanCommon->weightFloat.get();
+        originWeightSize = quanCommon->weightFloat.size();
+    } else if (nullptr == conv2d->weight_vec() || nullptr == conv2d->bias_vec()) {
+        MNN_ERROR("%s has no weight or bias. The model may be benchmark model, please revert the weight/bias firstly\n", op->name()->c_str());
+        return nullptr;
+    }
+    auto common = conv2d->common_param();
+    if (nullptr == originWeight) {
+        originWeight     = op->main_as_ConvolutionCustom()->weight_vec()->data();
+        originWeightSize = op->main_as_ConvolutionCustom()->weight_vec()->size();
+    }
+
+    if (1 == common->group()) {
+        return _createUnit(inputs[0], outputs[0], backend, common, originWeight, originWeightSize,
+                           conv2d->bias_vec()->data(), conv2d->bias_vec()->size());
+    }
+    // Split
+    std::vector<std::shared_ptr<Execution>> subConvolution;
+    auto group            = common->group();
+    auto groupOutputCount = common->outputCount() / group;
+    auto groupWeightSize  = originWeightSize / group;
+    std::shared_ptr<Tensor> emptyInput(Tensor::createDevice<float>(inputs[0]->shape(), Tensor::CAFFE));
+    std::shared_ptr<Tensor> emptyOutput(Tensor::createDevice<float>(outputs[0]->shape(), Tensor::CAFFE));
+    emptyInput->setLength(1, inputs[0]->channel() / group);
+    emptyOutput->setLength(1, outputs[0]->channel() / group);
+    for (int i = 0; i < group; ++i) {
+        auto newConvolution =
+            _createUnit(emptyInput.get(), emptyOutput.get(), backend, common, originWeight + groupWeightSize * i,
+                        groupWeightSize, conv2d->bias_vec()->data() + groupOutputCount * i, groupOutputCount);
+        subConvolution.push_back(std::shared_ptr<Execution>(newConvolution));
+    }
+    return new ConvolutionGroup(backend, subConvolution);
+}
+
 } // namespace MNN

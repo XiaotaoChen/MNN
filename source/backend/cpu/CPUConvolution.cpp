@@ -83,5 +83,16 @@ public:
     }
 };
 
+class ConvolutionCustomFactory : public CPUBackend::Creator {
+public:
+    virtual Execution *onCreate(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs,
+                                const MNN::Op *op, Backend *backend) const override {
+        return ConvolutionCustomFloatFactory::create(inputs, outputs, op, backend);
+    }
+};
+
 REGISTER_CPU_OP_CREATOR(ConvolutionFactory, OpType_Convolution);
+
+REGISTER_CPU_OP_CREATOR(ConvolutionCustomFactory, OpType_ConvolutionCustom);
+
 } // namespace MNN
