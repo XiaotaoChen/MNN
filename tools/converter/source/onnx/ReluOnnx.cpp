@@ -45,5 +45,5 @@ void ReluOnnx::run(MNN::OpT* dstOp, const onnx::NodeProto* onnxNode,
     dstOp->main.value = relu;
 }
 
-REGISTER_CONVERTER(ReluOnnx, Relu);
+// REGISTER_CONVERTER(ReluOnnx, Relu);
 REGISTER_CONVERTER(ReluOnnx, LeakyRelu);
