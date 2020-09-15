@@ -206,6 +206,11 @@ static int test_main(int argc, const char* argv[]) {
     }
     auto allInput = net->getSessionInputAll(session);
     for (auto& iter : allInput) {
+
+        MNN_PRINT("[MNNV2Basic.cpp] tensor name:%s, size: %d, element size:%d, [n,c,h,w]: [%d, %d, %d, %d]\n", 
+                   iter.first.c_str(), iter.second->size(), iter.second->elementSize(), iter.second->batch(), iter.second->channel(),
+                   iter.second->height(), iter.second->width());
+
         auto size = iter.second->size();
         if (size <= 0) {
             continue;

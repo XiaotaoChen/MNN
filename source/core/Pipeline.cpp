@@ -14,7 +14,7 @@
 #include "core/WrapExecution.hpp"
 //#define MNN_OPEN_TIME_TRACE
 #include <MNN/AutoTime.hpp>
-//#define MNN_DEBUG_TENSOR_SIZE
+// #define MNN_DEBUG_TENSOR_SIZE
 namespace MNN {
 OperatorInfo::OperatorInfo() {
     mContent = new Info;
@@ -328,7 +328,11 @@ ErrorCode Pipeline::prepare() {
 
 ErrorCode Pipeline::execute() {
     mBackend->onExecuteBegin();
+
+    MNN_PRINT("[Pipeline.cpp] mUnits.size:%d\n", mUnits.size());
+
     for (int i=0; i<mUnits.size(); ++i) {
+        // MNN_PRINT("[Pipeline.cpp] unit %d op type: %s to execute...\n", i, MNN::EnumNameOpType(mUnits[i]->mType));
         auto& u = mUnits[i];
         auto code = u->execute();
         if (code != NO_ERROR) {

@@ -111,6 +111,9 @@ Session* Interpreter::createMultiPathSession(const std::vector<ScheduleConfig>& 
         return nullptr;
     }
     auto info       = Schedule::schedule(mNet->net, configs);
+
+    MNN_PRINT("[Interpreter.cpp] pipelineInfo size:%d\n", info.pipelineInfo.size());
+
     auto newSession = std::unique_ptr<Session>(new Session(info));
     if (!newSession->valid()) {
         MNN_PRINT("Invalide Session!!\n");

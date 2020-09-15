@@ -133,6 +133,9 @@ static bool _setUpTensorInfo(std::vector<std::shared_ptr<Tensor>>& allTensors, c
     // Set Input Tensor, if the type of input is not the same with ExtraTensorDescribe, use input parameter
     for (int opIndex = 0; opIndex < net->oplists()->size(); ++opIndex) {
         auto op = net->oplists()->GetAs<Op>(opIndex);
+        
+        // MNN_PRINT("[Schedule.cpp] opIndex:%d, op Type: %s, name:%s\n", opIndex, MNN::EnumNameOpType(op->type()), op->name()->data());
+
         if (OpType_Input == op->type()) {
             MNN_ASSERT(nullptr != op->outputIndexes());
             auto index      = op->outputIndexes()->data()[0];
@@ -326,6 +329,9 @@ Schedule::ScheduleInfo Schedule::schedule(const Net* net, const std::vector<Sche
         return schedule;
     }
     bool valid = _setUpTensorInfo(allTensors, net);
+
+    MNN_PRINT("[Schedule.cpp] allTensors.size:%d\n", allTensors.size());
+
     schedule.validForResize = valid;
 
     std::vector<std::pair<Backend::Info, std::vector<PipelineInfo>>> result;
@@ -336,6 +342,13 @@ Schedule::ScheduleInfo Schedule::schedule(const Net* net, const std::vector<Sche
         compute.numThread = config.numThread;
         compute.user      = config.backendConfig;
         auto oplists      = _scheduleUnit(net, config, allTensors);
+
+        MNN_PRINT("[Schedule.cpp] pipeline info size:%d\n", oplists.size());
+        // for (int i=0; i<oplists.size(); i++) {
+        //     MNN_PRINT("%d: op type:%s, name:%s\n", i, MNN::EnumNameOpType(oplists[i].op->type()), oplists[i].op->name()->data());
+        // }
+
+
         result.emplace_back(std::make_pair(compute, std::move(oplists)));
     }
 
@@ -350,6 +363,11 @@ Schedule::ScheduleInfo Schedule::schedule(const Net* net, const std::vector<Sche
             }
         }
     }
+
+    // MNN_PRINT("[Schedule.cpp] generated schedule oplist size:%d\n", oplists.size());
+    // for (auto op: oplists) {
+    //     MNN_PRINT("[Schedule.cpp] op type:%s, name:%s\n", MNN::EnumNameOpType(op->type()), op->name()->data());
+    // }
 
     std::set<int> outputIndexes;
     std::set<int> inputIndexes;
@@ -377,10 +395,27 @@ Schedule::ScheduleInfo Schedule::schedule(const Net* net, const std::vector<Sche
     std::set_difference(inputIndexes.begin(), inputIndexes.end(), outputIndexes.begin(), outputIndexes.end(),
                         std::inserter(inputIndexDiff, inputIndexDiff.begin()));
 
+    MNN_PRINT("[Schedule.cpp] input diff size:%d: ", inputIndexDiff.size());
+    for (auto item: inputIndexDiff) {
+        MNN_PRINT("%d, ", item);
+    }
+    MNN_PRINT("\n");
+    MNN_PRINT("[Schedule.cpp] output diff size:%d: ", outputIndexesDiff.size());
+    for (auto item: outputIndexesDiff) {
+        MNN_PRINT("%d, ", item);
+    }
+    MNN_PRINT("\n");
+
     std::unordered_map<std::string, int> tensorNameIndexMap;
     for (int i = 0; i < net->tensorName()->size(); ++i) {
         tensorNameIndexMap[net->tensorName()->Get(i)->str()] = i;
     }
+
+    // MNN_PRINT("[Schedule.cpp] tensorNameIndexMap size:%d\n", tensorNameIndexMap.size());
+    // for (const auto& item: tensorNameIndexMap) {
+    //     MNN_PRINT("%s : %d\n", item.first.c_str(), item.second);
+    // }
+
     for (auto& config : configs) {
         for (const auto& name : config.saveTensors) {
             if (tensorNameIndexMap.count(name)) {
@@ -426,6 +461,13 @@ Schedule::ScheduleInfo Schedule::schedule(const Net* net, const std::vector<Sche
         TensorUtils::getDescribe(schedule.allTensors[outputIndex].second.get())->usage = TensorUsage::OUTPUT;
         schedule.allTensors[outputIndex].first += 1;
     }
+
+    // MNN_PRINT("[Schedule.cpp] schedule.allTensors size:%d\n", schedule.allTensors.size());
+    // for (int i=0; i < schedule.allTensors.size(); i++) {
+    //     MNN_PRINT("tensor idx:%d: %d, usage:%d\n", i, schedule.allTensors[i].first, TensorUtils::getDescribe(schedule.allTensors[i].second.get())->usage);
+    // }
+
+
     return schedule;
 }
 } // namespace MNN

@@ -105,6 +105,9 @@ ErrorCode Session::run() const {
         MNN_ERROR("Can't run session because not resized\n");
         return COMPUTE_SIZE_ERROR;
     }
+
+    MNN_PRINT("[Session.cpp] session run mPipelines size:%d\n", mPipelines.size());
+
     for (auto& iter : mPipelines) {
         auto error = iter->execute();
         if (NO_ERROR != error) {
