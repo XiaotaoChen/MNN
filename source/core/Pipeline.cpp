@@ -14,7 +14,7 @@
 #include "core/WrapExecution.hpp"
 //#define MNN_OPEN_TIME_TRACE
 #include <MNN/AutoTime.hpp>
-// #define MNN_DEBUG_TENSOR_SIZE
+#define MNN_DEBUG_TENSOR_SIZE
 namespace MNN {
 OperatorInfo::OperatorInfo() {
     mContent = new Info;
@@ -245,18 +245,27 @@ ErrorCode Pipeline::Unit::prepare(Backend* bn, Backend* cpuBn) {
     }
     bn = mExecution->backend();
     {
+
+        MNN_PRINT("[Pipeline.cpp] mInputs size:%d\n", mInputs.size());
+
         auto success = _allocTensors(bn, mInputs);
         if (!success) {
             return OUT_OF_MEMORY;
         }
     }
     {
+        MNN_PRINT("[Pipeline.cpp] mOutputs size:%d\n", mOutputs.size());
+
         auto success = _allocTensors(bn, mOutputs);
         if (!success) {
             return OUT_OF_MEMORY;
         }
     }
+
+    MNN_PRINT("[Pipeline.cpp] to run execution onResize\n");
+
     auto code = mExecution->onResize(mInputs, mOutputs);
+
     if (TENSOR_NOT_SUPPORT == code || TENSOR_NEED_DIVIDE == code) {
         // TODO
         mExecution.reset();
@@ -280,6 +289,8 @@ ErrorCode Pipeline::Unit::prepare(Backend* bn, Backend* cpuBn) {
     if (mConst) {
         code = mExecution->onExecute(mInputs, mOutputs);
     }
+
+    MNN_PRINT("[Pipeline.cpp] release op inputs buffer\n");
 
     for (auto t : mInputs) {
         auto des = TensorUtils::getDescribe(t);

@@ -142,6 +142,10 @@ static bool _setUpTensorInfo(std::vector<std::shared_ptr<Tensor>>& allTensors, c
             auto tensor     = tensors[index].get();
             auto& tb        = tensor->buffer();
             auto inputParam = op->main_as_Input();
+
+            auto tmpdims = inputParam->dims();
+            MNN_PRINT("[Schedule.cpp] input dim[%d, %d, %d, %d], size:%d\n", tmpdims->data()[0], tmpdims->data()[1], tmpdims->data()[2], tmpdims->data()[3], tmpdims->size());
+
             if (auto idims = inputParam->dims()) {
                 for (int i = 0; i < idims->size(); ++i) {
                     tb.dim[i].min = 0;

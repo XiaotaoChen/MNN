@@ -24,7 +24,7 @@
 
 #define MAX_THREAD_NUMBER 32
 
-//#define MNN_DUMP_MEMORY_USAGE
+#define MNN_DUMP_MEMORY_USAGE
 #define MNN_CPU_CHECK_NAN 1
 namespace MNN {
 #ifdef MNN_CODEGEN_REGISTER
@@ -133,6 +133,22 @@ bool CPUBackend::onAcquireBuffer(const MNN::Tensor* nativeTensorConst, StorageTy
     auto& buffer      = nativeTensor->buffer();
 
     auto size = nativeTensor->size();
+
+    switch (storageType)
+    {
+    case STATIC:
+        MNN_PRINT("[CPUBackend.cpp] STATIC Allocator size:%d\n", size);
+        break;
+    case DYNAMIC:
+        MNN_PRINT("[CPUBackend.cpp] DYNAMIC Allocator size:%d\n", size);
+        break;
+    case DYNAMIC_SEPERATE:
+        MNN_PRINT("[CPUBackend.cpp] DYNAMIC_SEPERATE Allocator size:%d\n", size);
+        break;
+    default:
+        break;
+    }
+
 
     // MNN_PRINT("Acquire size = %d\n", size);
     if (size <= 0) {
