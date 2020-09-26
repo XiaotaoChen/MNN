@@ -20,8 +20,28 @@
 #include "onnxConverter.hpp"
 #include "onnxOpConverter.hpp"
 
+// template<typename T>
+// void print(const std::map<std::__cxx11::string, const T *>& tensor_map, std::string name) {
+//     std::cout << name << " size: " << tensor_map.size() << std::endl;
+    
+//     int index = 0;
+//     for (const auto& iter : tensor_map) {
+//         std::cout << index++ << ": " << iter.first << std::endl;
+//     }
+// }
+
+// template<typename T>
+// void print(const std::map<std::__cxx11::string, T>& tensor_map, std::string name) {
+//     std::cout << name << " size: " << tensor_map.size() << std::endl;
+    
+//     int index = 0;
+//     for (const auto& iter : tensor_map) {
+//         std::cout << index++ << ": " << iter.first << std::endl;
+//     }
+// }
+
 template<typename T>
-void print(const std::map<std::__cxx11::string, const T *>& tensor_map, std::string name) {
+void print(const std::map<std::string, const T *>& tensor_map, std::string name) {
     std::cout << name << " size: " << tensor_map.size() << std::endl;
     
     int index = 0;
@@ -31,7 +51,7 @@ void print(const std::map<std::__cxx11::string, const T *>& tensor_map, std::str
 }
 
 template<typename T>
-void print(const std::map<std::__cxx11::string, T>& tensor_map, std::string name) {
+void print(const std::map<std::string, T>& tensor_map, std::string name) {
     std::cout << name << " size: " << tensor_map.size() << std::endl;
     
     int index = 0;
@@ -39,6 +59,7 @@ void print(const std::map<std::__cxx11::string, T>& tensor_map, std::string name
         std::cout << index++ << ": " << iter.first << std::endl;
     }
 }
+
 
 
 int onnx2MNNNet(const std::string inputModel, const std::string bizCode, std::unique_ptr<MNN::NetT>& netT) {

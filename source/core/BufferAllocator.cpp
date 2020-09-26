@@ -9,7 +9,7 @@
 #include "core/BufferAllocator.hpp"
 #include "core/Macro.h"
 
-#define DUMP_USAGE
+// #define DUMP_USAGE
 
 namespace MNN {
 BufferAllocator::Node::~Node() {
@@ -29,12 +29,12 @@ void* BufferAllocator::alloc(size_t size, bool seperate) {
             pointer = getFromFreeList(mCurrenetFreeList, size, false);
         }
         if (nullptr != pointer) {
-            MNN_PRINT("[BufferAllocator.cpp] alloc from currenetFreeList\n");
+            // MNN_PRINT("[BufferAllocator.cpp] alloc from currenetFreeList\n");
             return pointer;
         }
         pointer = getFromFreeList(&mFreeList, size);
         if (nullptr != pointer) {
-            MNN_PRINT("[BufferAllocator.cpp] alloc from mFreeList\n");
+            // MNN_PRINT("[BufferAllocator.cpp] alloc from mFreeList\n");
             return pointer;
         }
     }
@@ -111,10 +111,10 @@ bool BufferAllocator::free(void* pointer, bool needRelease) {
     mUsedList.erase(x);
 
     if (nullptr != mCurrenetFreeList) {
-        MNN_PRINT("[BufferAllocator.cpp] free memory to mCurrenetFreeList, permitMerge: false\n");
+        // MNN_PRINT("[BufferAllocator.cpp] free memory to mCurrenetFreeList, permitMerge: false\n");
         returnMemory(mCurrenetFreeList, node, false);
     } else {
-        MNN_PRINT("[BufferAllocator.cpp] free memory to mFreeList, permitMerge: true\n");
+        // MNN_PRINT("[BufferAllocator.cpp] free memory to mFreeList, permitMerge: true\n");
         returnMemory(&mFreeList, node);
     }
 #ifdef DUMP_USAGE
