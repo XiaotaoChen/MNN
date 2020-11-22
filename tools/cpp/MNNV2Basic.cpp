@@ -335,6 +335,9 @@ static int test_main(int argc, const char* argv[]) {
         net->runSession(session);
     }
 
+    MNN_PRINT("return by cxt\n");
+    return 0;
+
     // save output
     auto outputTensor = net->getSessionOutput(session, NULL);
     MNN::Tensor expectTensor(outputTensor, outputTensor->getDimensionType());

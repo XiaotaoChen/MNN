@@ -147,6 +147,9 @@ ErrorCode GeometryComputerUtils::shapeComputeAndGeometryTransform(
     /** Size Compute and compute Const Begin */
     GeometryComputer::Context ctx(backupBackend, false);
 
+
+    MNN_PRINT("[GeometryComputerUtils.cpp] geometry:%d\n", geometry);
+
     // Size Compute and compute Const
     for (auto& info : infos) {
         if (info.op->type() == OpType_Const) {
@@ -242,6 +245,9 @@ ErrorCode GeometryComputerUtils::shapeComputeAndGeometryTransform(
                 }
             }
         }
+
+        MNN_PRINT("[GeometryComputerUtils.cpp] tmpBuffer.command.size:%d, buffer.command.size:%d\n", tmpBuffer.command.size(), buffer.command.size());
+
         GeometryComputerUtils::makeRaster(tmpBuffer, buffer, geoContext);
     } else {
         for (auto& info : infos) {
@@ -264,6 +270,8 @@ ErrorCode GeometryComputerUtils::shapeComputeAndGeometryTransform(
 void GeometryComputerUtils::makeRaster(const CommandBuffer& srcBuffer, CommandBuffer& dstBuffer,
                                        GeometryComputer::Context& ctx) {
     dstBuffer.extras = std::move(srcBuffer.extras);
+    MNN_PRINT("[GeometryComputerUtils::makeRaster] srcBuffer.size:%d, dstBuffer.size:%d\n", srcBuffer.command.size(), dstBuffer.command.size());
+    
     for (auto& iter : srcBuffer.command) {
         const Op* op = iter.op;
         auto cmd     = iter;
@@ -292,6 +300,8 @@ void GeometryComputerUtils::makeRaster(const CommandBuffer& srcBuffer, CommandBu
         }
         dstBuffer.command.emplace_back(std::move(cmd));
     }
+    MNN_PRINT("[GeometryComputerUtils::makeRaster] srcBuffer.size:%d, dstBuffer.size:%d\n", srcBuffer.command.size(), dstBuffer.command.size());
+    
 }
 Command GeometryComputerUtils::makeBinary(int type, Tensor* input0, Tensor* input1, Tensor* output) {
     std::unique_ptr<OpT> mul(new OpT);

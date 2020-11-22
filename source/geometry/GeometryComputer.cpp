@@ -167,6 +167,10 @@ bool GeometryComputer::compute(const Op* op, const std::vector<Tensor*>& inputs,
         }
     }
     auto status = this->onCompute(op, inputs, outputs, context, cmdBuffer);
+    if (rasterMap.size() > 0) {
+        MNN_PRINT("[GeometryComputer.cpp] rasterMap.size:%d, op type:%s, name:%s\n", rasterMap.size(), MNN::EnumNameOpType(op->type()), op->name()->c_str());
+    }
+    
     for (auto& iter : rasterMap) {
         cmdBuffer.extras.emplace_back(iter.first);
         auto des = TensorUtils::getDescribe(iter.first.get());
@@ -254,6 +258,7 @@ const GeometryComputer* GeometryComputer::search(int type) {
 }
 
 Command GeometryComputer::makeRaster(Tensor* input, Tensor* output) {
+    MNN_PRINT("[GeometryComputer.cpp] rasterMap to makeRaster\n");
     flatbuffers::FlatBufferBuilder builder;
     OpBuilder opBuilder(builder);
     opBuilder.add_type(OpType_Raster);

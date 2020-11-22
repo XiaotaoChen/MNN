@@ -378,6 +378,14 @@ void CPURaster::executeFaster(const std::vector<Tensor *> &inputs, const std::ve
 }
 
 ErrorCode CPURaster::onExecute(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
+    
+    MNN_PRINT("[CPURaster.cpp] mFast:%d, inputs size:%d, mSingleConvert:%d, mNeedZero:%d\ninputs shape:", mFast, inputs.size(), mSingleConvert, mNeedZero);
+    auto shapes = inputs[0]->shape();
+    for (int i=0; i<shapes.size(); i++) {
+        MNN_PRINT("%d ", shapes[i]);
+    }
+    MNN_PRINT("\n");
+
     if (mFast) {
         executeFaster(inputs, outputs);
         return NO_ERROR;

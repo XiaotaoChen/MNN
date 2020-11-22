@@ -175,6 +175,10 @@ Session* Interpreter::createMultiPathSession(const std::vector<ScheduleConfig>& 
     auto info           = Schedule::schedule(mNet->net, configs);
     auto validForResize = info.validForResize;
     RuntimeInfo rt = runtime;
+
+    MNN_PRINT("[added by cxt] callBackMode:%d, inputMode:%d, net->usage:%d\n", 
+               mNet->callBackMode, mNet->inputMode, mNet->net->usage());
+
     auto newSession =
         std::unique_ptr<Session>(new Session(std::move(info), mNet->callBackMode, mNet->inputMode, std::move(rt)));
     if (!newSession->valid()) {

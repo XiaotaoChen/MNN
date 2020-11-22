@@ -95,6 +95,14 @@ Pipeline::Pipeline(std::vector<Schedule::PipelineInfo>&& infos, std::shared_ptr<
     mBackend       = backend;
     mAllocInput    = allocInput;
     mInfo          = std::move(infos);
+
+    MNN_PRINT("[pipeline.cpp] mInfo.size:%d\n", mInfo.size());
+    // for(const auto& item : mInfo) {
+    //     MNN_PRINT("[pipeline.cpp] op type:%s, name:%s\n", MNN::EnumNameOpType(item.op->type()), item.op->name()->c_str());
+    // }
+
+    MNN_PRINT("[pipeline.cpp] mAllocInput:%d, mConstTensors.size:%d, mMidConstTensors.size:%d\n", mAllocInput, mConstTensors.size(), mMidConstTensors.size());
+
     GeometryComputerUtils::buildConstantTensors(mInfo, mBackupBackend, !mAllocInput, mConstTensors, mMidConstTensors);
 }
 
@@ -121,6 +129,9 @@ ErrorCode Pipeline::encode(bool isStatic) {
         mContext.clear();
         mBuffer.command.clear();
         mBuffer.extras.clear();
+
+        MNN_PRINT("[Pipeline.cpp] mConstTensors.size:%d, mMidConstTensors.size:%d, mInit:%d\n", mConstTensors.size(), mMidConstTensors.size(), mInit);
+
         /** Size Compute and compute Const Begin */
         for (auto t : mConstTensors) {
             TensorUtils::getDescribe(t)->backend = mBackupBackend.get();
@@ -136,6 +147,8 @@ ErrorCode Pipeline::encode(bool isStatic) {
         }
         mInit = true;
         GeometryComputerUtils::shapeComputeAndGeometryTransform(mInfo, mBuffer, mContext, mBackupBackend, mUseGeometry);
+
+        MNN_PRINT("[Pipeline.cpp] after GeometryTransform mInfo.size:%d, mBuffer.command.size:%d\n", mInfo.size(), mBuffer.command.size());
 #endif
     }
     return NO_ERROR;
@@ -147,6 +160,8 @@ ErrorCode Pipeline::allocMemory(bool supportDebug) {
     mBackend->onClearBuffer();
     mBackupBackend->onClearBuffer();
 
+    MNN_PRINT("[Pipeline.cpp] allocMemory mAllocInput:%d\n", mAllocInput);
+
     /** Prepare Execution And Alloc*/
     // Compute refCount
     for (auto& iter : mBuffer.command) {
@@ -156,6 +171,14 @@ ErrorCode Pipeline::allocMemory(bool supportDebug) {
         for (auto t : iter.inputs) {
             auto des = TensorUtils::getDescribe(t);
             if (des->memoryType == Tensor::InsideDescribe::MEMORY_VIRTUAL) {
+                MNN_PRINT("[Pipeline.cpp] allocMemory MEMORY_VIRTUAL op type:%s\nshape: ", MNN::EnumNameOpType(iter.op->type()));
+
+                auto shapes = t->shape();
+                for (int i=0; i < shapes.size(); i++) {
+                    MNN_PRINT("%d ", shapes[i]);
+                }
+                MNN_PRINT("\n");
+
                 for (auto& r : des->regions) {
                     TensorUtils::getDescribe(r.origin)->useCount += 1;
                 }
@@ -303,8 +326,14 @@ ErrorCode Pipeline::allocMemory(bool supportDebug) {
 
 ErrorCode Pipeline::execute() {
     mBackend->onExecuteBegin();
+
+    MNN_PRINT("[Pipeline.cpp] mBuffer.command.size:%d\n", mBuffer.command.size());
+
     for (int i = 0; i < mBuffer.command.size(); ++i) {
         auto& cmd = mBuffer.command[i];
+
+        // MNN_PRINT("[Pipeline.cpp] execute cmd type:%s\n", MNN::EnumNameOpType(cmd.op->type()));
+
         auto code = mExecutions[i]->onExecute(cmd.inputs, cmd.outputs);
         if (NO_ERROR != code) {
             mBackend->onExecuteEnd();
